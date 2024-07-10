@@ -58,8 +58,8 @@ class _MainHomePageState extends State<MainHomePage>{
         updateFavoriteItems: updateFavoriteItems,
         updateCartItems: updateCartItems,
       ),
-      FavoritePage(favoriteItems: favoriteItems, cartItems: cartItems, updateFavoriteItems: updateFavoriteItems, updateCartItems: updateCartItems),
-      CartPage(cartItems: cartItems,updateCartItems: updateCartItems,),
+      FavoritePage(cartItems: cartItems, updateFavoriteItems: updateFavoriteItems, updateCartItems: updateCartItems),
+      CartPage(updateCartItems: updateCartItems,),
       ProfilePage()
     ];
 

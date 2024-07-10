@@ -22,7 +22,8 @@ class DatabaseService {
         imgPath TEXT,
         price TEXT,
         description TEXT,
-        quantity INTEGER
+        quantity INTEGER,
+        UNIQUE (name, imgPath)
       )
     ''');
   }
@@ -47,7 +48,7 @@ class DatabaseService {
 
     return sql.openDatabase(
       path,
-      version: 2, // Increment version to trigger onUpgrade
+      version: 2,
       onCreate: (sql.Database database, int version) async {
         await createUserTable(database);
         await createCartTable(database);
@@ -55,19 +56,28 @@ class DatabaseService {
       },
       onUpgrade: (sql.Database database, int oldVersion, int newVersion) async {
         if (oldVersion < 2) {
-          // Add the phoneNo column to the users table
           await database.execute('ALTER TABLE users ADD COLUMN phoneNo TEXT');
         }
       },
     );
   }
 
+  static Future<void> closeDatabase() async {
+    final db = await DatabaseService.db();
+    await db.close();
+  }
+
   static Future<int> createUser(String username, String email, String phoneNo, String password) async {
     final db = await DatabaseService.db();
     final data = {'username': username, 'email': email, 'phoneNo': phoneNo, 'password': password};
 
-    final id = await db.insert('users', data, conflictAlgorithm: sql.ConflictAlgorithm.replace);
-    return id;
+    try {
+      final id = await db.insert('users', data, conflictAlgorithm: sql.ConflictAlgorithm.replace);
+      return id;
+    } catch (e) {
+      print('Error creating user: ${e.toString()}');
+      return -1;
+    }
   }
 
   static Future<Map<String, dynamic>?> getUser(String username) async {
@@ -79,11 +89,7 @@ class DatabaseService {
       limit: 1,
     );
 
-    if (result.isNotEmpty) {
-      return result.first;
-    } else {
-      return null;
-    }
+    return result.isNotEmpty ? result.first : null;
   }
 
   static Future<int> createFavorite(Item item) async {
@@ -93,14 +99,13 @@ class DatabaseService {
       'imgPath': item.imgPath,
       'price': item.price,
       'description': item.description,
-      'isFavorited': item.isFavorited ? 1 : 0
+      'isFavorited': 1 // Always set isFavorited to 1 when adding to favorites
     };
 
     try {
-      final id = await db.insert('favorites', data, conflictAlgorithm: sql.ConflictAlgorithm.ignore);
+      final id = await db.insert('favorites', data, conflictAlgorithm: sql.ConflictAlgorithm.replace);
       return id;
     } catch (e) {
-      // Handle the case where the item is already in the favorites table
       print('Item is already in favorites: ${e.toString()}');
       return -1;
     }
@@ -131,33 +136,53 @@ class DatabaseService {
     });
   }
 
-  static Future<void> updateFavoriteStatus(Item item) async {
-    final db = await DatabaseService.db();
-    final data = {
-      'isFavorited': item.isFavorited ? 1 : 0,
-    };
-
-    await db.update(
-      'favorites',
-      data,
-      where: 'name = ? AND imgPath = ?',
-      whereArgs: [item.name, item.imgPath],
-    );
-  }
 
   static Future<int> addCartItem(Item item) async {
     final db = await DatabaseService.db();
-    final data = {
-      'name': item.name,
-      'imgPath': item.imgPath,
-      'price': item.price,
-      'description': item.description,
-      'quantity': item.quantity
-    };
 
-    final id = await db.insert('cart', data, conflictAlgorithm: sql.ConflictAlgorithm.replace);
-    return id;
+    // Check if item already exists in the cart
+    final List<Map<String, dynamic>> existingItems = await db.query(
+      'cart',
+      where: 'name = ? AND imgPath = ?',
+      whereArgs: [item.name, item.imgPath],
+    );
+
+    if (existingItems.isNotEmpty) {
+      // Update quantity of existing item to the new item's quantity
+      final existingItem = existingItems.first;
+
+      try {
+        await db.update(
+          'cart',
+          {'quantity': item.quantity},
+          where: 'id = ?',
+          whereArgs: [existingItem['id']],
+        );
+        return existingItem['id'];
+      } catch (e) {
+        print('Error updating cart item: ${e.toString()}');
+        return -1;
+      }
+    } else {
+      // Insert new item to the cart
+      final data = {
+        'name': item.name,
+        'imgPath': item.imgPath,
+        'price': item.price,
+        'description': item.description,
+        'quantity': item.quantity
+      };
+
+      try {
+        final id = await db.insert('cart', data, conflictAlgorithm: sql.ConflictAlgorithm.replace);
+        return id;
+      } catch (e) {
+        print('Error adding cart item: ${e.toString()}');
+        return -1;
+      }
+    }
   }
+
 
   static Future<void> deleteCartItem(Item item) async {
     final db = await DatabaseService.db();
@@ -182,4 +207,5 @@ class DatabaseService {
       );
     });
   }
+
 }

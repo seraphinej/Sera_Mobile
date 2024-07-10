@@ -29,6 +29,7 @@ class _PastryPageState extends State<PastryPage> {
   List<Item> pastryItem = [];
   List<Item> favoriteItems = [];
   List<Item> cartItems = [];
+  bool isLoading = true;
 
   @override
   void initState() {
@@ -40,7 +41,9 @@ class _PastryPageState extends State<PastryPage> {
   void _getInitialInfo() async{
     pastryItem = Item.getPastryItem();
     favoriteItems = await DatabaseService.getFavorites();
-    setState(() {});
+    setState(() {
+      isLoading = false;
+    });
   }
 
   void toggleFavorite(Item item) async {
@@ -48,12 +51,13 @@ class _PastryPageState extends State<PastryPage> {
       item.isFavorited = !item.isFavorited;
       if (item.isFavorited) {
         favoriteItems.add(item);
+        DatabaseService.createFavorite(item);
       } else {
         favoriteItems.removeWhere((i) => i.name == item.name && i.imgPath == item.imgPath);
+        DatabaseService.deleteFavorite(item);
       }
     });
 
-    await DatabaseService.updateFavoriteStatus(item);
     widget.updateFavoriteItems(favoriteItems);
   }
 

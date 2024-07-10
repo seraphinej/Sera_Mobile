@@ -33,6 +33,7 @@ class _HomePageState extends State<HomePage> {
   List<CategoryModel> categories = [];
   List<Item> popularItems = [];
   List<Item> favoriteItems = [];
+  bool isLoading = true;
   late VideoPlayerController _videoPlayerController;
 
   @override
@@ -59,7 +60,9 @@ class _HomePageState extends State<HomePage> {
     categories = CategoryModel.getCategories();
     popularItems = Item.getPopularItems();
     favoriteItems = await DatabaseService.getFavorites();
-    setState(() {});
+    setState(() {
+      isLoading = false;
+    });
   }
 
   void toggleFavorite(Item item) async {
@@ -67,12 +70,13 @@ class _HomePageState extends State<HomePage> {
       item.isFavorited = !item.isFavorited;
       if (item.isFavorited) {
         favoriteItems.add(item);
+        DatabaseService.createFavorite(item);
       } else {
         favoriteItems.removeWhere((i) => i.name == item.name && i.imgPath == item.imgPath);
+        DatabaseService.deleteFavorite(item);
       }
     });
 
-    await DatabaseService.updateFavoriteStatus(item);
     widget.updateFavoriteItems(favoriteItems);
   }
 
@@ -426,56 +430,52 @@ class _HomePageState extends State<HomePage> {
           child: Text(
             'Discover Our Cafeteria',
             style: TextStyle(
-              color: HexColor("#212A91"),
-              fontSize: 20,
-              fontWeight: FontWeight.w600,
-              fontFamily: 'NotoSerif'
+                color: HexColor("#212A91"),
+                fontSize: 20,
+                fontWeight: FontWeight.w600,
+                fontFamily: 'NotoSerif'
             ),
           ),
         ),
-        const SizedBox(height: 10,),
+        const SizedBox(height: 10),
         _videoPlayerController.value.isInitialized
-            ? AspectRatio(
-              aspectRatio: _videoPlayerController.value.aspectRatio,
-              child: VideoPlayer(_videoPlayerController),
-              )
-            : Container(
-                height: 200,
-                color: Colors.black,
-                child: const Center(
-                  child: CircularProgressIndicator(),
-                ),
+            ? Stack(
+            alignment: Alignment.center,
+            children: [
+              AspectRatio(
+                aspectRatio: _videoPlayerController.value.aspectRatio,
+                child: VideoPlayer(_videoPlayerController),
               ),
+              IconButton(
+                icon: Icon(
+                  _videoPlayerController.value.isPlaying ? Icons.pause : Icons.play_arrow,
+                  color: Colors.white,
+                  size: 50.0,
+                ),
+                onPressed: () {
+                  setState(() {
+                    _videoPlayerController.value.isPlaying
+                        ? _videoPlayerController.pause()
+                        : _videoPlayerController.play();
+                  });
+                },
+              ),
+            ],
+          )
+            : Container(
+              height: 200,
+              color: Colors.black,
+              child: const Center(
+                child: CircularProgressIndicator(),
+              ),
+            ),
         const SizedBox(height: 20),
         VideoProgressIndicator(
           _videoPlayerController,
           allowScrubbing: true,
-          colors: const VideoProgressColors(
-            backgroundColor: Colors.red,
-            bufferedColor: Colors.black,
-            playedColor: Colors.blueAccent,
-          ),
-        ),
-        const SizedBox(height: 20),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            IconButton(
-              onPressed: () {
-                _videoPlayerController.pause();
-              },
-              icon: const Icon(Icons.pause),
-            ),
-            const SizedBox(width: 10),
-            IconButton(
-              onPressed: () {
-                _videoPlayerController.play();
-              },
-              icon: const Icon(Icons.play_arrow),
-            ),
-          ],
         ),
       ],
     );
   }
+
 }

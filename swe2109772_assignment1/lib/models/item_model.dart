@@ -1,9 +1,9 @@
 class Item {
-  int? id;
-  String name;
-  String imgPath;
-  String price;
-  String description;
+  final int? id;
+  final String name;
+  final String imgPath;
+  final String price;
+  final String description;
   bool isFavorited;
   bool isAddedToCart;
   int quantity;

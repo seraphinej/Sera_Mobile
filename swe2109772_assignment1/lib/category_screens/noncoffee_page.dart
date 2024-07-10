@@ -29,6 +29,7 @@ class _NonCoffeePageState extends State<NonCoffeePage> {
   List<Item> nonCoffeeItem = [];
   List<Item> favoriteItems = [];
   List<Item> cartItems = [];
+  bool isLoading = true;
 
   @override
   void initState() {
@@ -40,7 +41,9 @@ class _NonCoffeePageState extends State<NonCoffeePage> {
   void _getInitialInfo() async{
     nonCoffeeItem = Item.getNonCoffeeItem();
     favoriteItems = await DatabaseService.getFavorites();
-    setState(() {});
+    setState(() {
+      isLoading = false;
+    });
   }
 
   void toggleFavorite(Item item) async {
@@ -48,12 +51,13 @@ class _NonCoffeePageState extends State<NonCoffeePage> {
       item.isFavorited = !item.isFavorited;
       if (item.isFavorited) {
         favoriteItems.add(item);
+        DatabaseService.createFavorite(item);
       } else {
         favoriteItems.removeWhere((i) => i.name == item.name && i.imgPath == item.imgPath);
+        DatabaseService.deleteFavorite(item);
       }
     });
 
-    await DatabaseService.updateFavoriteStatus(item);
     widget.updateFavoriteItems(favoriteItems);
   }
 

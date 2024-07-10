@@ -120,7 +120,7 @@ class _LoginPageState extends State<Login> {
                     ),
                   ),
                   const SizedBox(
-                    height: 25,
+                    height: 40,
                   ),
                   ClipRRect(
                     borderRadius: const BorderRadius.all(Radius.circular(10)),
@@ -201,7 +201,7 @@ class _LoginPageState extends State<Login> {
                     ),
                   ),
                   const SizedBox(
-                    height: 15,
+                    height: 30,
                   ),
                   Row(
                     children: [

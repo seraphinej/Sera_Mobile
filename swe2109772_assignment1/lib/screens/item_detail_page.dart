@@ -31,18 +31,14 @@ class _ItemDetailsPageState extends State<ItemDetailsPage> {
       cartItems.add(item);
       widget.addToCart(item);
     });
-  }
 
-  /*void toggleFavorite(Item item) {
-    setState(() {
-      widget.item.isFavorited = !widget.item.isFavorited;
-      if (item.isFavorited) {
-        favoriteItems.add(item);
-      } else {
-        favoriteItems.remove(item);
-      }
-    });
-  }*/
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: const Text("Item added to cart"),
+        duration: const Duration(seconds: 1),
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -51,9 +47,9 @@ class _ItemDetailsPageState extends State<ItemDetailsPage> {
         title: Text(
           widget.item.name,
           style: TextStyle(
-            fontSize: 25,
-            fontFamily: 'NotoSerif',
-            color: Colors.white
+              fontSize: 25,
+              fontFamily: 'NotoSerif',
+              color: Colors.white
           ),
         ),
         backgroundColor: HexColor('#212A91'),
@@ -78,18 +74,18 @@ class _ItemDetailsPageState extends State<ItemDetailsPage> {
                 Text(
                   widget.item.name,
                   style: const TextStyle(
-                    fontSize: 25,
-                    fontWeight: FontWeight.bold,
-                    fontFamily: 'NotoSerif'
+                      fontSize: 25,
+                      fontWeight: FontWeight.bold,
+                      fontFamily: 'NotoSerif'
                   ),
                 ),
                 const SizedBox(height: 8),
                 Text(
                   widget.item.price,
                   style: const TextStyle(
-                    fontSize: 23,
-                    fontWeight: FontWeight.w600,
-                    fontFamily: 'NotoSerif'
+                      fontSize: 23,
+                      fontWeight: FontWeight.w600,
+                      fontFamily: 'NotoSerif'
                   ),
                 ),
                 const SizedBox(height: 8),
@@ -97,12 +93,12 @@ class _ItemDetailsPageState extends State<ItemDetailsPage> {
                   widget.item.description,
                   textAlign: TextAlign.justify,
                   style: const TextStyle(
-                    fontSize: 17,
-                    fontFamily: 'NotoSerif',
-                    fontWeight: FontWeight.w300
+                      fontSize: 17,
+                      fontFamily: 'NotoSerif',
+                      fontWeight: FontWeight.w300
                   ),
                 ),
-                SizedBox(height: 80),
+                const SizedBox(height: 80),
               ],
             ),
           ),
